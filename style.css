@@ -1,0 +1,93 @@
+table {border-collapse: collapse; max-width: 1300px}
+table {border: 2px solid black;}
+td {border: 1px solid black;}
+th {border: 1.5px solid black;}
+th, td {padding: 5px;}
+th {text-align: left;}
+tr:nth-child(1) {background-color: #f2f2f2;} /* Header row grey */
+tr:hover {background-color: #f1f1f1;} /* Hover row grey */
+/* Create new div types pos, neg */
+.pos {background-color: #ccffcc}
+.neg {background-color: #e6e6e6}
+
+/* Make br size smaller */
+br {line-height: 0.1;}
+/* List with no bullet points */
+ul {list-style-type: none;}
+/* Create row, column divs for an image grid */
+.row:after {content: ""; display: table; clear: both;}
+/* For images */
+.columnL {float: left; width: 49%; padding: 2px;}
+.columnR {float: right; width: 49%; padding: 2px;}
+/* For info divs */
+.columnContainer {display: flex;}
+.columnLhugger {flex: 1; text-align: right;}
+.columnLhugger_noflex {flex: 0; text-align: right;} /* No flex, or else takes up as much space as possible */
+.columnRhugger {flex: 1; text-align: left;}
+/* Text box */
+.text-box {
+    border: 2px solid black; /* Creates a solid black border */
+    padding: 10px; /* Adds space inside the border */
+    display: inline-flex; /* Allows the box to shrink or expand to fit content */
+    justify-content: center; /* Centers text horizontally */
+    align-items: center; /* Centers text vertically */
+    background-color: #f0f0f0; /* Optional: Light gray background color */
+    height: 40px; /* Sets the height of the box */
+}
+
+/* What to do with visited links */
+a:visited{
+    color: rgb(2, 2, 174);
+  }
+
+/* Add max-width to images */
+img {max-width: 1300px;}
+
+/* Create a log */
+#log2 {
+    background-color: #f4f4f4;
+    padding: 7px;
+    border: 3px solid black;
+    height: 50px;
+    width: 500px;
+    overflow-y: scroll;
+    font-family: monospace;
+    text-align: left;
+}
+
+
+/* Create button */
+/* Button styles */
+.hover-button {
+    background-color: #f4f4f4; /* Initial background color */
+    color: black; /* Initial text color */
+    height: 64px; /* Button height */
+    width: 150px; /* Button width */
+    padding: 5px 10px; /* Padding for button size */
+    border: 3px solid black; /* Border style */
+    border-radius: 0px; /* Rounded corners */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    font-size: 14px; /* Font size */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
+}
+
+/* Hover effect */
+.hover-button:hover {
+    background-color: lightblue; /* Background color on hover */
+    color: black; /* Text color on hover */
+}
+             
+/* Links div: to the right */
+.links {
+    height: 64px; /* height */
+    width: 200px; /* width */
+    background-color: #f4f4f4;
+    border: 2px solid black;
+}
+
+
+/* Background color to black */
+body {
+    background-color: white; /* Sets the background color to black */
+    color: black; /* Sets the default text color to white for better visibility */
+}

@@ -1,0 +1,345 @@
+<html><head><center><title>Portfolio Analysis Wednesday November 6th</title></center><style>table {border-collapse: collapse; max-width: 1300px}
+table {border: 2px solid black;}
+td {border: 1px solid black;}
+th {border: 1.5px solid black;}
+th, td {padding: 5px;}
+th {text-align: left;}
+tr:nth-child(1) {background-color: #f2f2f2;} /* Header row grey */
+tr:hover {background-color: #f1f1f1;} /* Hover row grey */
+/* Create new div types pos, neg */
+.pos {background-color: #ccffcc}
+.neg {background-color: #e6e6e6}
+
+/* Make br size smaller */
+br {line-height: 0.1;}
+/* List with no bullet points */
+ul {list-style-type: none;}
+/* Create row, column divs for an image grid */
+.row:after {content: ""; display: table; clear: both;}
+/* For images */
+.columnL {float: left; width: 49%; padding: 2px;}
+.columnR {float: right; width: 49%; padding: 2px;}
+/* For info divs */
+.columnContainer {display: flex;}
+.columnLhugger {flex: 1; text-align: right;}
+.columnLhugger_noflex {flex: 0; text-align: right;} /* No flex, or else takes up as much space as possible */
+.columnRhugger {flex: 1; text-align: left;}
+/* Text box */
+.text-box {
+    border: 2px solid black; /* Creates a solid black border */
+    padding: 10px; /* Adds space inside the border */
+    display: inline-flex; /* Allows the box to shrink or expand to fit content */
+    justify-content: center; /* Centers text horizontally */
+    align-items: center; /* Centers text vertically */
+    background-color: #f0f0f0; /* Optional: Light gray background color */
+    height: 40px; /* Sets the height of the box */
+}
+
+/* What to do with visited links */
+a:visited{
+    color: rgb(2, 2, 174);
+  }
+
+/* Add max-width to images */
+img {max-width: 1300px;}
+
+/* Create a log */
+#log2 {
+    background-color: #f4f4f4;
+    padding: 7px;
+    border: 3px solid black;
+    height: 50px;
+    width: 500px;
+    overflow-y: scroll;
+    font-family: monospace;
+    text-align: left;
+}
+
+
+/* Create button */
+/* Button styles */
+.hover-button {
+    background-color: #f4f4f4; /* Initial background color */
+    color: black; /* Initial text color */
+    height: 64px; /* Button height */
+    width: 150px; /* Button width */
+    padding: 5px 10px; /* Padding for button size */
+    border: 3px solid black; /* Border style */
+    border-radius: 0px; /* Rounded corners */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    font-size: 14px; /* Font size */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
+}
+
+/* Hover effect */
+.hover-button:hover {
+    background-color: lightblue; /* Background color on hover */
+    color: black; /* Text color on hover */
+}
+             
+/* Links div: to the right */
+.links {
+    height: 64px; /* height */
+    width: 200px; /* width */
+    background-color: #f4f4f4;
+    border: 2px solid black;
+}
+
+
+/* Background color to black */
+body {
+    background-color: white; /* Sets the background color to black */
+    color: black; /* Sets the default text color to white for better visibility */
+}
+</style></head><body><center><div class="columnContainer"><div class="columnLhugger"><div class="text-box" id="market_status" style="font-size: 20px;">Market Status:</div></div><div class="text-box" id="current_dt" style="font-size: 30px; font-weight: bold;">Wednesday, November 06 at 1:23:56 AM CST</div><div class="columnRhugger"><div class="text-box" id="next_update" style="font-size: 20px;">Next Update:</div></div></div><div class="columnContainer"><div class="columnLHugger"><div class="columnContainer"><div class="columnLhugger"><button class="hover-button" onclick="location.reload()" style="width: 75px;">Refresh Page</button></div><div class="columnLhugger_noflex"><button class="hover-button" onclick="runAnalysis()" style="font-size: 20px;">Fetch Data</button></div></div></div><div id="log2"></div><div class="columnRhugger"><div class="links"><ul><li><a href="https://finance.yahoo.com/">Yahoo Finance</a></li><li><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/corr_matrix.html">Correlation Matrix</a></li></ul></div></div></div><script>// Get current time
+function get_current_time(isFullTime) {
+    if (isFullTime) { // Get in format Day name month date with suffix hh:mm:ss AM/PM and timezone
+        // return new Date().toLocaleString('en-US', {weekday: 'long', month: 'long', day: '2-digit', hour12: true, hour: 'numeric', minute: 'numeric', second: 'numeric'});
+        return new Date().toLocaleString('en-US', {weekday: 'long', month: 'long', day: '2-digit', hour12: true, hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'short'});
+    } else { // Get in format hh:mm:ss
+        return new Date().toLocaleTimeString('en-US', {hour12: true});
+    }
+} 
+
+// Function to check if trading is open
+function isTradingOpen() {
+    // Get new york day and time
+    const newYorkTime = new Date().toLocaleString('en-US', {timeZone: 'America/New_York'});
+    const newYorkDate = new Date(newYorkTime);
+    const day = newYorkDate.getDay();
+    const hour = newYorkDate.getHours();
+    const minute = newYorkDate.getMinutes();
+    const second = newYorkDate.getSeconds();
+
+    const isWeekend = (day == 0 || day == 6);
+    const isTradingHours = (hour >= 9 && hour < 16) || (hour == 16 && minute == 0 && second == 0);
+    return !isWeekend && isTradingHours;
+}
+
+// Update market status 
+function update_isTradingOpen() {
+    const marketStatus = isTradingOpen() ? "Open" : "Closed";
+    const toDisplay = 'Market Status: ' + marketStatus;
+    document.getElementById('market_status').innerHTML = toDisplay;
+}
+
+// Log to console and to HTML log container
+const logContainer = document.getElementById('log2'); 
+function log2(message, useFullTime=false) {
+    if (useFullTime) {
+        message = `[${get_current_time(isFullTime=true)}]: ${message}`;
+    } else {
+        message = `(${get_current_time(isFullTime=false)}) ${message}`;
+    }
+    console.log(message);
+    const p = document.createElement('p');
+    p.style.margin = '0px'; // change p height to 0px
+    p.textContent = message;
+    logContainer.appendChild(p);
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+// Update current time
+function update_current_time() {
+    const current_time = get_current_time(isFullTime=true);
+    document.getElementById('current_dt').innerHTML = current_time;
+}
+
+// WebSocket connection
+var has_connection = false;
+function connect() {
+    socket = new WebSocket("ws://localhost:8080");
+
+    // When connection is opened
+    socket.onopen = function(event) {
+        has_connection = true;
+        socket.send("Client connected to server");
+    };
+
+    // When message received
+    socket.onmessage = function(event) {
+        const response = event.data;
+        // portfolio analysis successfully finished
+        if (response == "Refresh Page") {
+            location.reload(true); // Reload page, ignore cache
+            is_ready_to_run = true;
+        }
+        log2(response);
+    };
+
+    // When connection is closed
+    socket.onclose = function(event) {
+        if (has_connection) {
+            log2(`WebSocket connection closed`);
+            has_connection = false;
+        } else {
+            log2(`WebSocket connection failed`);
+        }    
+    };
+
+    // When error occurs
+    socket.onerror = function(event) {
+        // Get error message
+        console.error(event);
+    };
+}
+
+// Attempt to reconnect every 5 seconds
+// if connection is closed
+// This way, we don't have to CTRL + R to refresh
+// and reconnect to server. Less human input!
+function reconnectIfClosed(ignoreMarketStatus=false) {
+    // If connection is closed, try to reconnect
+    if (!has_connection) {
+        if (isTradingOpen() || ignoreMarketStatus) {
+            connect();
+        }
+    }
+}
+
+// When fetch data button is clicked
+function runAnalysis() {
+    if (socket.readyState === WebSocket.OPEN) {
+        if (is_ready_to_run) {
+            socket.send("Update Portfolio");
+            is_ready_to_run = false;
+        }
+        else {
+            log2("Analysis already running");
+        }
+    }
+    else {
+        reconnectIfClosed(ignoreMarketStatus=true);
+        is_ready_to_run = true;
+    }
+}
+
+
+// Update next_update, the time remaining until
+// we call runAnalysis
+// dt_between_updates: how often to run runAnalysis (ms)
+function updateNextUpdate(dt_between_updates) {
+    // If market is closed, get how long until it opens
+    if (!isTradingOpen()) {
+        // Get the current date and time in New York
+        const newYorkTime = new Date().toLocaleString('en-US', {timeZone: 'America/New_York'});
+        const newYorkDate = new Date(newYorkTime);
+
+        // Get the day of the week in New York
+        const dayOfWeekNY = newYorkDate.toLocaleString('en-US', {weekday: 'long'});
+        const hour = newYorkDate.getHours();
+        const minute = newYorkDate.getMinutes();
+
+        // Get desired date
+        const desiredDate = new Date(newYorkDate);
+
+        // Get the time until market opens
+        if (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(dayOfWeekNY)) {
+            // Check if too early in the day (earlier than 9:30 AM)
+            if (hour < 9 || (hour == 9 && minute < 30)) {
+                desiredDate.setHours(9, 30, 0, 0);
+            } else { // Too late in the day, go to next day
+                desiredDate.setDate(desiredDate.getDate() + 1);
+                desiredDate.setHours(9, 30, 0, 0);
+
+                // If it's Friday, go to Monday
+                if (dayOfWeekNY == 'Friday') {
+                    desiredDate.setDate(desiredDate.getDate() + 2);
+                }
+            }
+
+        // Weekends
+        } else if (['Saturday', 'Sunday'].includes(dayOfWeekNY)) {
+            desiredDate.setDate(desiredDate.getDate() + (dayOfWeekNY == 'Saturday' ? 2 : 1));
+            desiredDate.setHours(9, 30, 0, 0);
+        }
+
+        // Calculate timeToOpen: between desired date and NY current date (ms)
+        const timeToOpen = desiredDate - newYorkDate;
+      
+        // Calculate days, hours, minutes, seconds until market opens
+        let days = Math.floor(timeToOpen / (1000 * 60 * 60 * 24));
+        let hours = Math.floor((timeToOpen % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        let minutes = Math.ceil((timeToOpen % (1000 * 60 * 60)) / (1000 * 60));
+
+        // If minutes is 60, increment hours and set minutes to 0
+        if (minutes == 60) {
+            hours += 1;
+            minutes = 0;
+        }
+        // If hours is 24, increment days and set hours to 0
+        if (hours == 24) {
+            days += 1;
+            hours = 0;
+        }
+
+        // Display on div next_update the time until market opens
+        let toDisplay = 'Market opens in: ';
+        toDisplay += days > 0 ? days + 'd ' : '';
+        toDisplay += hours > 0 ? hours + 'h ' : '';
+        toDisplay += minutes + 'm';
+        document.getElementById('next_update').innerHTML = toDisplay;
+    }
+
+    // If market is open, get how long until next update
+    else {
+        // First iteration, set updateTime to now + dt_between_updates
+        if (updateTime == -1) {
+            updateTime = new Date().getTime() + dt_between_updates;
+        } 
+        let distance = updateTime - new Date().getTime();
+        // Not time yet, update time remaining
+        if (distance > 0) {
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            const toDisplay = 'Next update: ' + minutes + 'm ' + seconds + 's';
+            document.getElementById('next_update').innerHTML = toDisplay;
+        // Run analysis when distance is <= 0
+        } else if (distance <= 0) {
+            document.getElementById('next_update').innerHTML = "Next update: Now";
+            runAnalysis();
+            updateTime = new Date().getTime() + dt_between_updates; // Set next update time
+        }
+    }
+}
+
+// 1-second updates
+function oneSecondUpdates() {
+    update_current_time(); // current time at top of page
+    update_isTradingOpen(); // display market status
+    updateNextUpdate(dt_between_updates = 2 * 60 * 1000); // display next update time
+}
+
+// Call set interval functions
+function call_setIntervals() {
+    setInterval(oneSecondUpdates, 1 * 1000);
+    
+    // reload page if connection is closed and market is open
+    setInterval(reconnectIfClosed, 10 * 1000); // every 10 seconds
+}
+
+// VARIABLES ======================================================
+var updateTime = -1; // time we will run update
+var is_ready_to_run = true; // so we don't run analysis while it's already running
+
+// SET INTERVALS ======================================================
+call_setIntervals();
+
+
+// INITIALIZATION ======================================================
+log2(`HTML Generated`, useFullTime=true);
+connect();
+
+</script><br></br><table style="max-width: 230px"><tr><th></th><th><center>Daily % Change</center></th><th><center>Daily Change</center></th><th><center>Unrealized % Return</center></th><th><center>Unrealized Return</center></th><th><center>β</center></th><th><center>SPY Corr</center></th><th><center>Weekly Vol</center></th><th><center>Monthly Vol</center></th><th><center>Trail PE</center></th><th><center>Fwd PE</center></th><th><center>Trail EPS</center></th><th><center>Fwd EPS</center></th><th><center>Year $ Div</center></th><th><center>Qty</center></th><th><center>Purchase Price</center></th><th><center>Cur. Price</center></th><th><center>% Portfolio</center></th><th><center>Total Value</center></th><th></th></tr><tr><th><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/portfolio_analysis.html" style="font-weight: bold;"><div style="text-align: right;">Portfolio</div></a></th><td><center><div class="pos">1.46%</div></center></td><td><center><div class="pos">5,856</div></center></td><td><center><div class="pos">19.14%</div></center></td><td><center><div class="pos">65,173</div></center></td><td><center>1.38</center></td><td><center>0.77</center></td><td><center>2.02</center></td><td><center>1.23</center></td><td><center>-</center></td><td><center>-</center></td><td><center>-</center></td><td><center>-</center></td><td><center>2,337</center></td><td><center>1</center></td><td><center>340,495.90</center></td><td><center>405,668.46</center></td><td><center>100.00%</center></td><td><center>405,668</center></td><th><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/portfolio_analysis.html" style="font-weight: bold;"><div style="text-align: left;">Portfolio</div></a></th></tr><tr><th><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/NVDA.html" style="font-weight: bold;"><div style="text-align: right;">NVDA</div></a></th><td><center><div class="pos">2.84%</div></center></td><td><center><div class="pos">3,706</div></center></td><td><center><div class="pos">20.86%</div></center></td><td><center><div class="pos">23,184</div></center></td><td><center>1.79</center></td><td><center>0.64</center></td><td><center>2.94</center></td><td><center>2.27</center></td><td><center>64</center></td><td><center>34</center></td><td><center>2</center></td><td><center>4</center></td><td><center>1,007</center></td><td><center>960</center></td><td><center>115.76</center></td><td><center>139.91</center></td><td><center>33.11%</center></td><td><center>134,314</center></td><th><a href="https://finance.yahoo.com/quote/NVDA/" style="font-weight: bold;"><div style="text-align: left;">NVDA</div></a></th></tr><tr><th><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/AAPL.html" style="font-weight: bold;"><div style="text-align: right;">AAPL</div></a></th><td><center><div class="pos">0.65%</div></center></td><td><center><div class="pos">756</div></center></td><td><center><div class="pos">23.77%</div></center></td><td><center><div class="pos">22,528</div></center></td><td><center>1.21</center></td><td><center>0.76</center></td><td><center>1.00</center></td><td><center>1.08</center></td><td><center>37</center></td><td><center>27</center></td><td><center>6</center></td><td><center>8</center></td><td><center>528</center></td><td><center>525</center></td><td><center>180.54</center></td><td><center>223.45</center></td><td><center>28.92%</center></td><td><center>117,311</center></td><th><a href="https://finance.yahoo.com/quote/AAPL/" style="font-weight: bold;"><div style="text-align: left;">AAPL</div></a></th></tr><tr><th><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/MSFT.html" style="font-weight: bold;"><div style="text-align: right;">MSFT</div></a></th><td><center><div class="pos">0.74%</div></center></td><td><center><div class="pos">707</div></center></td><td><center><div class="pos">1.80%</div></center></td><td><center><div class="pos">1,704</div></center></td><td><center>1.22</center></td><td><center>0.81</center></td><td><center>2.91</center></td><td><center>1.54</center></td><td><center>34</center></td><td><center>28</center></td><td><center>12</center></td><td><center>15</center></td><td><center>235</center></td><td><center>234</center></td><td><center>404.20</center></td><td><center>411.48</center></td><td><center>23.74%</center></td><td><center>96,286</center></td><th><a href="https://finance.yahoo.com/quote/MSFT/" style="font-weight: bold;"><div style="text-align: left;">MSFT</div></a></th></tr><tr><th><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/SPY.html" style="font-weight: bold;"><div style="text-align: right;">SPY</div></a></th><td><center><div class="pos">1.21%</div></center></td><td><center><div class="pos">688</div></center></td><td><center><div class="pos">44.39%</div></center></td><td><center><div class="pos">17,757</div></center></td><td><center>1.00</center></td><td><center>1.00</center></td><td><center>1.17</center></td><td><center>0.68</center></td><td><center>-</center></td><td><center>-</center></td><td><center>-</center></td><td><center>-</center></td><td><center>567</center></td><td><center>100</center></td><td><center>399.38</center></td><td><center>576.68</center></td><td><center>14.24%</center></td><td><center>57,757</center></td><th><a href="https://finance.yahoo.com/quote/SPY/" style="font-weight: bold;"><div style="text-align: left;">SPY</div></a></th></tr><style>tr:nth-child(2) {border: 4px solid black;}</style><style>th:nth-child(2), td:nth-child(2) {border-left: 3px solid black;}</style><style>th:nth-child(4), td:nth-child(4) {border-left: 3px solid black;}</style><style>th:nth-child(8), td:nth-child(8) {border-left: 3px solid black;}</style><style>th:nth-child(10), td:nth-child(10) {border-left: 3px solid black;}</style><style>th:nth-child(15), td:nth-child(15) {border-left: 3px solid black;}</style><style>th:nth-child(5), td:nth-child(5) {border-right: 3px solid black;}</style><style>th:nth-child(19), td:nth-child(19) {border-right: 3px solid black;}</style></table><br></br><br></br><br></br><img src="/Users/seanyamamoto/workspace2/investing/fportfolio/images/portfolio_overview.png" width="95%"></img><hr></hr><div class="row"><div class="columnL"><center><h2><u><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/NVDA.html">NVDA</a></u></h2><img src="/Users/seanyamamoto/workspace2/investing/fportfolio/images/NVDA.png" width="98%"></img></center><center><h2><u><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/MSFT.html">MSFT</a></u></h2><img src="/Users/seanyamamoto/workspace2/investing/fportfolio/images/MSFT.png" width="98%"></img></center></div><div class="columnR"><center><h2><u><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/AAPL.html">AAPL</a></u></h2><img src="/Users/seanyamamoto/workspace2/investing/fportfolio/images/AAPL.png" width="98%"></img></center><center><h2><u><a href="/Users/seanyamamoto/workspace2/investing/fportfolio/pages/SPY.html">SPY</a></u></h2><img src="/Users/seanyamamoto/workspace2/investing/fportfolio/images/SPY.png" width="98%"></img></center></div></div><hr></hr><h2>Column Definitions</h2><li style="font-size: 20px;">Daily % Change: Daily percentage change</li><li style="font-size: 20px;">Daily Change: Daily position dollar change ($)</li><li style="font-size: 20px;">Unrealized % Return: Unrealized percentage return</li><li style="font-size: 20px;">Unrealized Return: Unrealized dollar return ($)</li><li style="font-size: 20px;">β: Stock risk in relation to market</li><li style="font-size: 20px;">SPY Corr: Correlation with SPY</li><li style="font-size: 20px;">Weekly Vol: σ of 5 day returns (%)</li><li style="font-size: 20px;">Monthly Vol: σ of 21 day returns (%)</li><li style="font-size: 20px;">Trail PE: (Current price) to (Past earnings) ratio</li><li style="font-size: 20px;">Fwd PE: (Current price) to (Anticipated earnings) ratio</li><li style="font-size: 20px;">Trail EPS: Past earnings per share</li><li style="font-size: 20px;">Fwd EPS: Anticipated earnings per share</li><li style="font-size: 20px;">Year $ Div: Expected dividends payout for sum of shares</li><li style="font-size: 20px;">Qty: Number of shares</li><li style="font-size: 20px;">Purchase Price: Price stock was purchased at ($)</li><li style="font-size: 20px;">Cur. Price: Current price of stock ($)</li><li style="font-size: 20px;">% Portfolio: Percentage of total portfolio value</li><li style="font-size: 20px;">Total Value: Total value of position ($)</li><br></br><hr></hr><h2>Indicator Definitions</h2><div style="max-width: 800px"><li style="font-size: 24px;"><u>Bollinger Bands</u></li><ul style="font-size: 20px;"><li>
+        - Bollinger Bands is a technical analysis tool used to determine where prices are high and low relative to each other</li><li>        - These bands are composed of three lines: a simple moving average (the middle band) and an upper and lower band</li><li>        - The upper and lower bands are typically two standard deviations above or below a 20-period simple moving average (SMA)</li><li>        - The bands widen and narrow as the volatility of the underlying asset changes</li><li>        </li></ul><li style="font-size: 24px;"><u>Keltner Channels</u></li><ul style="font-size: 20px;"><li>
+        - Keltner Channels are volatility-based bands that are placed on either side of an asset's price and can aid 
+            in determining the direction of a trend</li><li>        - The exponential moving average (EMA) of a Keltner Channel is typically 20 periods, although this can be adjusted if desired</li><li>        - The upper and lower bands are typically set two times the average true range (ATR) above and below the EMA, 
+            although the multiplier can also be adjusted based on personal preference</li><li>        - Price reaching the upper Keltner Channel band is bullish while reaching the lower band is bearish</li><li>        - The angle of the Keltner Channel also aids in identifying the trend direction. 
+            The price may also oscillate between the upper and lower Keltner Channel bands, 
+            which can be interpreted as resistance and support levels</li><li>        </li></ul><li style="font-size: 24px;"><u>Donchian Channels</u></li><ul style="font-size: 20px;"><li>
+        - Donchian Channels are a technical indicator that seeks to identify bullish and bearish extremes that favor reversals, 
+            higher and lower breakouts, breakdowns, and other emerging trends</li><li>        - The middle band computes the average between the highest high over a given period and the lowest low over the same time. 
+            These points identify the median or mean reversion price</li><li>        - Combining moving averages, volume indicators, and moving average convergence divergence (MACD) with Donchian channels 
+            can lead to a more complete picture of the market for an asset</li><li>        - The channels are popular for their simplicity and effectiveness, particularly for following trends and using momentum 
+            strategies. They can be applied to many markets, including stocks, commodities, and forex</li><li>        </li></ul><li style="font-size: 24px;"><u>VIX</u></li><ul style="font-size: 20px;"><li>
+        - The VIX measures the market's expectation of 30-day volatility for the S&amp;P 500 Index</li><li>        - Calculation: It's calculated using the prices of S&amp;P 500 index options, both puts and calls, across a range of strike prices</li><li>        - Nickname: Often called the "fear index" or "fear gauge" as it reflects investor sentiment and market uncertainty</li><li>        - Scale: Expressed as a percentage, representing the expected annualized change in the S&amp;P 500 index over the next 30 days</li><li>        - Interpretation: VIX below 20: Generally indicates low volatility and market stability, VIX 20-30: Moderate volatility, VIX above 30: High volatility, often indicating market stress or uncertainty</li><li>        </li></ul></div><hr></hr><h2>Generated on Wednesday 11/06/2024 01:23:56</h2></center></body></html>
